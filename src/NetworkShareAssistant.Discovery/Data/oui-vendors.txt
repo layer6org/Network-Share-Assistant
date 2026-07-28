@@ -1,0 +1,6 @@
+# Fallback database. build.ps1 / GitHub Actions replaces this from IEEE.
+001C42|MA-L|Parallels, Inc.
+005056|MA-L|VMware, Inc.
+000C29|MA-L|VMware, Inc.
+BC2411|MA-L|Proxmox Server Solutions GmbH
+7483C2|MA-L|Ubiquiti Inc

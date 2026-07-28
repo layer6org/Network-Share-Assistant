@@ -1,0 +1,60 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Common", "src\NetworkShareAssistant.Common\NetworkShareAssistant.Common.csproj", "{00000001-1111-2222-3333-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Core", "src\NetworkShareAssistant.Core\NetworkShareAssistant.Core.csproj", "{00000002-1111-2222-3333-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Network", "src\NetworkShareAssistant.Network\NetworkShareAssistant.Network.csproj", "{00000003-1111-2222-3333-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Credentials", "src\NetworkShareAssistant.Credentials\NetworkShareAssistant.Credentials.csproj", "{00000004-1111-2222-3333-000000000004}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Discovery", "src\NetworkShareAssistant.Discovery\NetworkShareAssistant.Discovery.csproj", "{00000005-1111-2222-3333-000000000005}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Logging", "src\NetworkShareAssistant.Logging\NetworkShareAssistant.Logging.csproj", "{00000006-1111-2222-3333-000000000006}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.UI", "src\NetworkShareAssistant.UI\NetworkShareAssistant.UI.csproj", "{00000007-1111-2222-3333-000000000007}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkShareAssistant.Bootstrapper", "src\NetworkShareAssistant.Bootstrapper\NetworkShareAssistant.Bootstrapper.csproj", "{88888888-8888-8888-8888-888888888888}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88888888-8888-8888-8888-888888888888}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88888888-8888-8888-8888-888888888888}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88888888-8888-8888-8888-888888888888}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88888888-8888-8888-8888-888888888888}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000001-1111-2222-3333-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000001-1111-2222-3333-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000001-1111-2222-3333-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000001-1111-2222-3333-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000002-1111-2222-3333-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000002-1111-2222-3333-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000002-1111-2222-3333-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000002-1111-2222-3333-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000003-1111-2222-3333-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000003-1111-2222-3333-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000003-1111-2222-3333-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000003-1111-2222-3333-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000004-1111-2222-3333-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000004-1111-2222-3333-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000004-1111-2222-3333-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000004-1111-2222-3333-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000005-1111-2222-3333-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000005-1111-2222-3333-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000005-1111-2222-3333-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000005-1111-2222-3333-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000006-1111-2222-3333-000000000006}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000006-1111-2222-3333-000000000006}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000006-1111-2222-3333-000000000006}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000006-1111-2222-3333-000000000006}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000007-1111-2222-3333-000000000007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000007-1111-2222-3333-000000000007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000007-1111-2222-3333-000000000007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000007-1111-2222-3333-000000000007}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

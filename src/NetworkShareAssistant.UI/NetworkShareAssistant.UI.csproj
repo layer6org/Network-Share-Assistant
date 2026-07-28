@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Network-Share-Assistant</AssemblyName>
+    <RootNamespace>NetworkShareAssistant.UI</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
+    <Version>1.6.6</Version>
+    <Product>Netzwerkfreigabe-Assistent</Product>
+    <AssemblyVersion>1.6.6.0</AssemblyVersion>
+    <FileVersion>1.6.6.0</FileVersion>
+    <InformationalVersion>1.6.6</InformationalVersion>
+    <Authors>Stephan Biedermann</Authors>
+    <Copyright>© Stephan Biedermann</Copyright>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkShareAssistant.Core\NetworkShareAssistant.Core.csproj" />
+    <ProjectReference Include="..\NetworkShareAssistant.Network\NetworkShareAssistant.Network.csproj" />
+    <ProjectReference Include="..\NetworkShareAssistant.Credentials\NetworkShareAssistant.Credentials.csproj" />
+    <ProjectReference Include="..\NetworkShareAssistant.Discovery\NetworkShareAssistant.Discovery.csproj" />
+    <ProjectReference Include="..\NetworkShareAssistant.Logging\NetworkShareAssistant.Logging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\assets\app.ico">
+      <Link>app.ico</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <AssemblyName>Network-Share-Assistant</AssemblyName>
+    <RootNamespace>NetworkShareAssistant.Bootstrapper</RootNamespace>
+
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishAot>true</PublishAot>
+    <SelfContained>true</SelfContained>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <StripSymbols>true</StripSymbols>
+
+    <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
+
+    <Version>1.6.6</Version>
+    <AssemblyVersion>1.6.6.0</AssemblyVersion>
+    <FileVersion>1.6.6.0</FileVersion>
+    <InformationalVersion>1.6.6</InformationalVersion>
+    <Product>Network-Share-Assistant Universal Launcher</Product>
+    <Authors>Stephan Biedermann</Authors>
+    <Copyright>© Stephan Biedermann</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('Payloads\win-x64.zip')">
+    <EmbeddedResource Include="Payloads\win-x64.zip"
+                      LogicalName="NetworkShareAssistant.Payload.win-x64.zip" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('Payloads\win-arm64.zip')">
+    <EmbeddedResource Include="Payloads\win-arm64.zip"
+                      LogicalName="NetworkShareAssistant.Payload.win-arm64.zip" />
+  </ItemGroup>
+</Project>

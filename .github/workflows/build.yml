@@ -1,0 +1,115 @@
+name: Build Network-Share-Assistant 1.6.6
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Universal Windows EXE
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Regression tests
+        run: >
+          dotnet run
+          --project .\tests\NetworkShareAssistant.RegressionTests\NetworkShareAssistant.RegressionTests.csproj
+          -c Release
+
+      - name: Publish x64 payload
+        run: >
+          dotnet publish
+          .\src\NetworkShareAssistant.UI\NetworkShareAssistant.UI.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:PublishReadyToRun=false
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          -o .\artifacts\win-x64
+
+      - name: Publish ARM64 payload
+        run: >
+          dotnet publish
+          .\src\NetworkShareAssistant.UI\NetworkShareAssistant.UI.csproj
+          -c Release
+          -r win-arm64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:PublishReadyToRun=false
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          -o .\artifacts\win-arm64
+
+      - name: Prepare payloads
+        shell: powershell
+        run: |
+          New-Item `
+            -ItemType Directory `
+            -Force `
+            ".\src\NetworkShareAssistant.Bootstrapper\Payloads" | Out-Null
+
+          Compress-Archive `
+            -Path ".\artifacts\win-x64\*" `
+            -DestinationPath ".\src\NetworkShareAssistant.Bootstrapper\Payloads\win-x64.zip" `
+            -CompressionLevel Optimal `
+            -Force
+
+          Compress-Archive `
+            -Path ".\artifacts\win-arm64\*" `
+            -DestinationPath ".\src\NetworkShareAssistant.Bootstrapper\Payloads\win-arm64.zip" `
+            -CompressionLevel Optimal `
+            -Force
+
+      - name: Publish NativeAOT universal launcher
+        run: >
+          dotnet publish
+          .\src\NetworkShareAssistant.Bootstrapper\NetworkShareAssistant.Bootstrapper.csproj
+          -c Release
+          -r win-x64
+          -p:PublishAot=true
+          -p:IlcOptimizationPreference=Size
+          -p:StripSymbols=true
+          -o .\artifacts\universal
+
+      - name: Show executable size
+        shell: powershell
+        run: |
+          $file = Get-Item ".\artifacts\universal\Network-Share-Assistant.exe"
+          Write-Host ("Universal EXE: {0:N1} MB" -f ($file.Length / 1MB))
+
+      - name: Upload universal executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: Network-Share-Assistant
+          path: .\artifacts\universal\Network-Share-Assistant.exe
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: .\artifacts\universal\Network-Share-Assistant.exe

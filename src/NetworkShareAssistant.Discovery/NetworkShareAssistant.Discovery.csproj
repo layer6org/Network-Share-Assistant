@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkShareAssistant.Core\NetworkShareAssistant.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\oui-vendors.txt"
+                      LogicalName="NetworkShareAssistant.Discovery.oui-vendors.txt" />
+  </ItemGroup>
+</Project>
