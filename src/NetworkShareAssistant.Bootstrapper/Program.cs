@@ -37,7 +37,7 @@ internal static class Program
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "Netzwerkfreigabe-Assistent",
                 "Runtime",
-                "1.6.6",
+                "1.6.7",
                 runtime);
 
             string exe = Path.Combine(destination, "Network-Share-Assistant.exe");

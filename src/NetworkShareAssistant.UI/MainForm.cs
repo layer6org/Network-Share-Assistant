@@ -9,6 +9,9 @@ namespace NetworkShareAssistant.UI;
 
 public sealed class MainForm : Form
 {
+    private const double WorkingAreaWidthRatio = 0.92;
+    private const double WorkingAreaHeightRatio = 0.90;
+
     private readonly TextBox _server = new();
     private readonly ComboBox _share = new()
     {
@@ -77,9 +80,12 @@ public sealed class MainForm : Form
 
     public MainForm()
     {
-        StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(880, 680);
-        MinimumSize = new Size(700, 560);
+        StartPosition = FormStartPosition.Manual;
+
+        // Keep only a small safety minimum. Large fixed minimum sizes are
+        // themselves DPI-scaled by WinForms and become problematic at 450 %.
+        MinimumSize = new Size(320, 240);
+
         Font = new Font("Segoe UI", 10F);
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.FromArgb(246, 246, 248);
@@ -108,8 +114,17 @@ public sealed class MainForm : Form
 
         UpdateCredentialBehavior();
 
-        Shown += (_, _) => FitToWorkingArea();
-        DpiChanged += (_, _) => FitToWorkingArea();
+        Shown += (_, _) =>
+        {
+            ApplyWindowLayoutForCurrentMonitor();
+        };
+
+        DpiChanged += (_, _) =>
+        {
+            BeginInvoke(
+                new Action(
+                    ApplyWindowLayoutForCurrentMonitor));
+        };
     }
 
     private void BuildUi()
@@ -969,7 +984,7 @@ public sealed class MainForm : Form
         var info = new Label
         {
             Text =
-                $"Version 1.6.6{Environment.NewLine}" +
+                $"Version 1.6.7{Environment.NewLine}" +
                 "© Stephan Biedermann",
             AutoSize = true,
             Margin = new Padding(0, 0, 0, 12)
@@ -1038,31 +1053,57 @@ public sealed class MainForm : Form
         }
     }
 
-    private void FitToWorkingArea()
+    private void ApplyWindowLayoutForCurrentMonitor()
     {
+        Screen screen =
+            Screen.FromHandle(Handle);
+
         Rectangle work =
-            Screen.FromControl(this)
-                .WorkingArea;
+            screen.WorkingArea;
 
-        int width =
-            Math.Min(
-                880,
-                Math.Max(
-                    700,
-                    (int)(work.Width * 0.94)));
+        // PerMonitorV2 gives us device-pixel monitor bounds. Sizing the
+        // window as a percentage of the actual working area avoids mixing
+        // fixed 96-DPI logical sizes with 450-% device sizes.
+        int targetWidth =
+            (int)Math.Round(
+                work.Width *
+                WorkingAreaWidthRatio);
 
-        int height =
-            Math.Min(
-                680,
-                Math.Max(
-                    560,
-                    (int)(work.Height * 0.94)));
+        int targetHeight =
+            (int)Math.Round(
+                work.Height *
+                WorkingAreaHeightRatio);
 
-        Size = new Size(
-            width,
-            height);
+        targetWidth =
+            Math.Clamp(
+                targetWidth,
+                Math.Min(640, work.Width),
+                work.Width);
 
-        CenterToScreen();
+        targetHeight =
+            Math.Clamp(
+                targetHeight,
+                Math.Min(520, work.Height),
+                work.Height);
+
+        int x =
+            work.Left +
+            Math.Max(
+                0,
+                (work.Width - targetWidth) / 2);
+
+        int y =
+            work.Top +
+            Math.Max(
+                0,
+                (work.Height - targetHeight) / 2);
+
+        Bounds =
+            new Rectangle(
+                x,
+                y,
+                targetWidth,
+                targetHeight);
     }
 
     private void Fail(Exception ex)
