@@ -10,7 +10,6 @@ public sealed class CredentialService
     private const uint CredTypeGeneric = 1;
     private const uint CredTypeDomainPassword = 2;
     private const uint CredPersistEnterprise = 3;
-    private const uint CredAllowNameResolution = 1;
     private const uint CredTiServerFormatUnknown = 1;
 
     private const int ErrorNotFound = 1168;
@@ -65,16 +64,6 @@ public sealed class CredentialService
         ref CREDENTIAL_TARGET_INFORMATION targetInfo,
         ref CREDENTIAL credential,
         uint flags);
-
-    [DllImport(
-        "advapi32.dll",
-        EntryPoint = "CredGetTargetInfoW",
-        CharSet = CharSet.Unicode,
-        SetLastError = true)]
-    private static extern bool CredGetTargetInfo(
-        string targetName,
-        uint flags,
-        out IntPtr targetInfo);
 
     [DllImport(
         "advapi32.dll",
@@ -140,47 +129,11 @@ public sealed class CredentialService
                     Comment = "Network-Share-Assistant"
                 };
 
-            // Preferred path: after WNet authentication Windows' auth package
-            // usually cached the exact target information. This is the same
-            // target metadata the domain-credential APIs are designed to use.
-            if (CredGetTargetInfo(
-                    normalizedTarget,
-                    CredAllowNameResolution,
-                    out IntPtr targetInfoPtr))
-            {
-                try
-                {
-                    var targetInfo =
-                        Marshal.PtrToStructure<CREDENTIAL_TARGET_INFORMATION>(
-                            targetInfoPtr);
-
-                    if (HasServerIdentity(targetInfo))
-                    {
-                        if (CredWriteDomainCredentials(
-                                ref targetInfo,
-                                ref credential,
-                                0))
-                        {
-                            DeleteType(
-                                normalizedTarget,
-                                CredTypeGeneric,
-                                ignoreNotFound: true);
-
-                            return new CredentialWriteResult(
-                                normalizedTarget,
-                                "CredWriteDomainCredentialsW / CredGetTargetInfoW",
-                                true);
-                        }
-                    }
-                }
-                finally
-                {
-                    CredFree(targetInfoPtr);
-                }
-            }
-
-            // Fallback for IP/workgroup systems where Windows cannot provide
-            // cached target metadata. Mark the server format as unknown.
+            // Always store the credential under exactly the host name the
+            // user entered (the same host used in the UNC path). Windows'
+            // cached target information (CredGetTargetInfoW) may pick a
+            // different name (FQDN vs. NetBIOS), which made the stored name
+            // inconsistent and broke the subsequent lookup.
             var directTarget =
                 new CREDENTIAL_TARGET_INFORMATION
                 {
@@ -362,19 +315,6 @@ public sealed class CredentialService
                 StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
-
-    private static bool HasServerIdentity(
-        CREDENTIAL_TARGET_INFORMATION target) =>
-        !string.IsNullOrWhiteSpace(
-            target.NetbiosServerName) ||
-        !string.IsNullOrWhiteSpace(
-            target.DnsServerName) ||
-        !string.IsNullOrWhiteSpace(
-            target.NetbiosDomainName) ||
-        !string.IsNullOrWhiteSpace(
-            target.DnsDomainName) ||
-        !string.IsNullOrWhiteSpace(
-            target.DnsTreeName);
 
     private static void DeleteType(
         string target,

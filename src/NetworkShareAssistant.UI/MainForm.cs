@@ -647,8 +647,6 @@ public sealed class MainForm : Form
                     _persistent.Checked);
 
             // 1. Authenticate and create the persistent mapping first.
-            // This lets Windows' authentication package learn/cache the exact
-            // target metadata for the server.
             _network.Connect(
                 profile,
                 password);
@@ -659,7 +657,7 @@ public sealed class MainForm : Form
             if (mustStoreCredentials)
             {
                 // 2. Store the credential AFTER successful authentication,
-                // using LSA target information when available.
+                // always under exactly the host name that was entered.
                 credentialResult =
                     _credentials.SaveForAuthenticatedTarget(
                         host,
