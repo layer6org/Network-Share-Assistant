@@ -1,9 +1,11 @@
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 
 namespace NetworkShareAssistant.UI;
 
 internal sealed class RoundedButton : Button
 {
+    [DefaultValue(10)]
     public int Radius { get; set; } = 10;
 
     public RoundedButton()
@@ -62,6 +64,7 @@ internal sealed class RoundedButton : Button
 
 internal sealed class CardPanel : Panel
 {
+    [DefaultValue(16)]
     public int Radius { get; set; } = 16;
 
     public CardPanel()
