@@ -112,6 +112,13 @@ public sealed class MainForm : Form
             UpdateCredentialBehavior();
         };
 
+        // The rule "reconnect + username => save credentials" depends on the
+        // username as well, so re-evaluate it when the username changes.
+        _username.TextChanged += (_, _) =>
+        {
+            UpdateCredentialBehavior();
+        };
+
         UpdateCredentialBehavior();
 
         Shown += (_, _) =>
@@ -181,8 +188,7 @@ public sealed class MainForm : Form
                     _sharesButton.Click += (_, _) => LoadShares();
                     _connectedButton.Click += (_, _) => OpenMappedDrives();
                     _credentialsButton.Click += (_, _) =>
-                        new CredentialsDialog(_credentials)
-                            .ShowDialog(this);
+                        OpenCredentials();
 
                     return new Control[]
                     {
@@ -777,19 +783,41 @@ public sealed class MainForm : Form
         }
     }
 
+    private void OpenCredentials()
+    {
+        try
+        {
+            using var dialog =
+                new CredentialsDialog(_credentials);
+
+            dialog.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+        }
+    }
+
     private void OpenDiagnostics()
     {
         if (string.IsNullOrWhiteSpace(
                 _server.Text))
             return;
 
-        using var dialog =
-            new DiagnosticsDialog(
-                NetworkTarget.NormalizeHost(
-                    _server.Text),
-                _share.Text.Trim());
+        try
+        {
+            using var dialog =
+                new DiagnosticsDialog(
+                    NetworkTarget.NormalizeHost(
+                        _server.Text),
+                    _share.Text.Trim());
 
-        dialog.ShowDialog(this);
+            dialog.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+        }
     }
 
     private void ShowNetworkInfo()
@@ -817,12 +845,13 @@ public sealed class MainForm : Form
             lines.Add(string.Empty);
         }
 
-        new TextResultDialog(
+        using var resultDialog = new TextResultDialog(
             T.NetworkInfo,
             string.Join(
                 Environment.NewLine,
-                lines))
-            .ShowDialog(this);
+                lines));
+
+        resultDialog.ShowDialog(this);
     }
 
     private void ShowArpTable()
@@ -888,10 +917,11 @@ public sealed class MainForm : Form
                 ? "Nur Hosts mit tatsächlich aufgelöster individueller MAC-Adresse werden angezeigt. Null-, Broadcast-, Multicast- und unvollständige Einträge werden ausgeblendet."
                 : "Only hosts with an actually resolved individual MAC address are shown. Zero, broadcast, multicast and incomplete entries are hidden.");
 
-        new TextResultDialog(
+        using var resultDialog = new TextResultDialog(
             T.Arp,
-            string.Join(Environment.NewLine, lines))
-            .ShowDialog(this);
+            string.Join(Environment.NewLine, lines));
+
+        resultDialog.ShowDialog(this);
     }
 
     private async Task DoNslookupAsync()
@@ -914,10 +944,11 @@ public sealed class MainForm : Form
                 await _dnsLookup.LookupAsync(
                     prompt.Value);
 
-            new TextResultDialog(
+            using var resultDialog = new TextResultDialog(
                 T.Nslookup,
-                result)
-                .ShowDialog(this);
+                result);
+
+            resultDialog.ShowDialog(this);
         }
         catch (Exception ex)
         {

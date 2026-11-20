@@ -187,7 +187,15 @@ public sealed class NetworkDriveService
         string driveLetter,
         bool removePersistentProfile)
     {
-        string local = $"{Normalize(driveLetter)}:";
+        string letter = Normalize(driveLetter);
+        string local = $"{letter}:";
+
+        // Resolve the remote path BEFORE disconnecting. Afterwards neither
+        // WNetGetConnection nor HKCU\Network\<letter> knows it anymore, so
+        // the MountPoints2 label could not be found and would be orphaned.
+        string? remote =
+            TryGetRemotePath(local)
+            ?? GetNetworkRegistryValue(letter, "RemotePath");
 
         int result = WNetCancelConnection2(
             local,
@@ -201,7 +209,7 @@ public sealed class NetworkDriveService
                 $"Trennen von {local} fehlgeschlagen.");
         }
 
-        RemoveExplorerLabel(driveLetter);
+        RemoveExplorerLabel(letter, remote);
         RefreshExplorer();
     }
 
@@ -310,6 +318,13 @@ public sealed class NetworkDriveService
             TryGetRemotePath($"{letter}:")
             ?? GetNetworkRegistryValue(letter, "RemotePath");
 
+        RemoveExplorerLabel(letter, remote);
+    }
+
+    private static void RemoveExplorerLabel(
+        string letter,
+        string? remote)
+    {
         using (var networkKey = Registry.CurrentUser.OpenSubKey(
                    $@"Network\{letter}",
                    writable: true))

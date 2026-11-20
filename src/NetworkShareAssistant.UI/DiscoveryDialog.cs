@@ -12,6 +12,7 @@ public sealed class DiscoveryDialog : Form
     private readonly Button _select = new() { AutoSize = true };
     private readonly DiscoveryService _discovery = new();
     private readonly WakeOnLanService _wakeOnLan = new();
+    private readonly CancellationTokenSource _closing = new();
     public DiscoveredDevice? SelectedDevice { get; private set; }
 
     public DiscoveryDialog()
@@ -45,6 +46,11 @@ public sealed class DiscoveryDialog : Form
             _wake.Enabled = d is not null && !string.IsNullOrWhiteSpace(d.MacAddress);
         };
         Shown += async (_, _) => await SearchAsync();
+
+        // Stop a running scan when the dialog is closed; otherwise the scan
+        // keeps running and later touches disposed controls.
+        FormClosing += (_, _) => _closing.Cancel();
+        Disposed += (_, _) => _closing.Dispose();
     }
 
     private async Task SearchAsync()
@@ -52,14 +58,17 @@ public sealed class DiscoveryDialog : Form
         SetBusy(true);
         try
         {
-            var devices = await _discovery.DiscoverAsync();
+            var devices = await _discovery.DiscoverAsync(
+                cancellationToken: _closing.Token);
+            if (IsDisposed) return;
             _devices.DataSource = devices.ToList();
             _status.Text = L.De
                 ? $"{devices.Count} Gerät(e) mit offenem SMB TCP 445 gefunden. MAC/Hersteller werden soweit verfügbar angezeigt."
                 : $"{devices.Count} device(s) with SMB TCP 445 found. MAC/vendor are shown when available.";
         }
-        catch (Exception ex) { _status.Text = ex.Message; }
-        finally { SetBusy(false); }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
+        catch (Exception ex) { if (!IsDisposed) _status.Text = ex.Message; }
+        finally { if (!IsDisposed) SetBusy(false); }
     }
 
     private async Task WakeSelectedAsync()

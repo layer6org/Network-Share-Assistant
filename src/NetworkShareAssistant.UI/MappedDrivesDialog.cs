@@ -175,17 +175,38 @@ internal sealed class MappedDrivesDialog : Form
                 _list.SelectedIndex);
         }
 
+        var errors = new List<string>();
+
         foreach (int index in indexes)
         {
             var item =
                 _items[index];
 
-            _network.Disconnect(
-                item.DriveLetter,
-                item.Persistent);
+            try
+            {
+                _network.Disconnect(
+                    item.DriveLetter,
+                    item.Persistent);
+            }
+            catch (Exception ex)
+            {
+                // Keep going: one failing drive must not block the others
+                // nor crash the application.
+                errors.Add($"{item.DriveLetter}: {ex.Message}");
+            }
         }
 
         LoadItems();
+
+        if (errors.Count > 0)
+        {
+            MessageBox.Show(
+                this,
+                string.Join(Environment.NewLine, errors),
+                Text,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
     }
 
     private void RenameSelected()
@@ -210,9 +231,21 @@ internal sealed class MappedDrivesDialog : Form
                 prompt.Value))
             return;
 
-        _network.SetExplorerCustomLabel(
-            item.DriveLetter,
-            prompt.Value);
+        try
+        {
+            _network.SetExplorerCustomLabel(
+                item.DriveLetter,
+                prompt.Value);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                this,
+                ex.Message,
+                Text,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
 
         LoadItems();
     }

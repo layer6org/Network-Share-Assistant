@@ -41,6 +41,8 @@ public sealed class DiagnosticsDialog : Form
         }
         lines.Add(string.Empty);
         lines.Add(L.De ? "Hinweis: Gast-/Anonymous-SMB kann von Windows-Sicherheitsrichtlinien blockiert werden." : "Note: Guest/anonymous SMB may be blocked by Windows security policy.");
+        // The user may have closed the dialog while the checks were running.
+        if (IsDisposed) return;
         _output.Lines = lines.ToArray();
     }
 }

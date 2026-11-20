@@ -26,6 +26,14 @@ public sealed class CredentialsDialog : Form
         if (_list.SelectedItem is not CredentialEntry entry) return;
         string question = L.De ? $"Zugangsdaten für '{entry.Target}' löschen?" : $"Delete credentials for '{entry.Target}'?";
         if (MessageBox.Show(this, question, L.De ? "Bestätigung" : "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-        _service.Delete(entry.Target); RefreshEntries();
+        try
+        {
+            _service.Delete(entry.Target);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        RefreshEntries();
     }
 }

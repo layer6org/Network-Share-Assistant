@@ -27,15 +27,32 @@ public sealed class WakeOnLanService
         using var udp = new UdpClient();
         udp.EnableBroadcast = true;
 
+        int sent = 0;
+        SocketException? lastError = null;
+
         foreach (IPAddress broadcast in broadcasts.Distinct())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await udp.SendAsync(
-                packet,
-                new IPEndPoint(broadcast, 9),
-                cancellationToken);
+            try
+            {
+                await udp.SendAsync(
+                    packet,
+                    new IPEndPoint(broadcast, 9),
+                    cancellationToken);
+
+                sent++;
+            }
+            catch (SocketException ex)
+            {
+                // One unreachable interface (VPN, disconnected adapter, ...)
+                // must not prevent sending on the remaining networks.
+                lastError = ex;
+            }
         }
+
+        if (sent == 0 && lastError is not null)
+            throw lastError;
     }
 
     private static byte[] ParseMac(string mac)
@@ -43,9 +60,11 @@ public sealed class WakeOnLanService
         string normalized =
             mac.Replace(":", "")
                .Replace("-", "")
+               .Replace(".", "")
                .Trim();
 
-        if (normalized.Length != 12)
+        if (normalized.Length != 12 ||
+            !normalized.All(Uri.IsHexDigit))
             throw new ArgumentException("Ungültige MAC-Adresse.", nameof(mac));
 
         var bytes = new byte[6];
@@ -62,7 +81,8 @@ public sealed class WakeOnLanService
     {
         foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
         {
-            if (nic.OperationalStatus != OperationalStatus.Up)
+            if (nic.OperationalStatus != OperationalStatus.Up ||
+                nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
                 continue;
 
             foreach (var ua in nic.GetIPProperties().UnicastAddresses)
