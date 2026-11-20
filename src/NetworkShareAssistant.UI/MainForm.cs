@@ -9,8 +9,10 @@ namespace NetworkShareAssistant.UI;
 
 public sealed class MainForm : Form
 {
-    private const double WorkingAreaWidthRatio = 0.92;
-    private const double WorkingAreaHeightRatio = 0.90;
+    // Preferred client width at 100 % scaling (96 DPI). Scaled with the
+    // monitor DPI and limited to the working area.
+    private const int PreferredLogicalWidth = 860;
+    private const double MaxWorkingAreaRatio = 0.92;
 
     private readonly TextBox _server = new();
     private readonly ComboBox _share = new()
@@ -22,9 +24,13 @@ public sealed class MainForm : Form
     {
         UseSystemPasswordChar = true
     };
-    private readonly CheckBox _saveCredentials = new();
+    private readonly CheckBox _saveCredentials = new()
+    {
+        AutoSize = true
+    };
     private readonly CheckBox _persistent = new()
     {
+        AutoSize = true,
         Checked = true
     };
     private readonly ComboBox _freeDrive = new()
@@ -56,6 +62,13 @@ public sealed class MainForm : Form
     private UiText T => new(_language);
 
     private Label? _title;
+    private TableLayoutPanel? _root;
+    private Control? _header;
+    private TableLayoutPanel? _stack;
+
+    // Produces the current status text in the current language, so that
+    // switching the language also translates the status line.
+    private Func<string> _statusText = () => string.Empty;
     private Label? _serverLabel;
     private Label? _shareLabel;
     private Label? _usernameLabel;
@@ -149,7 +162,9 @@ public sealed class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        root.Controls.Add(BuildHeader(), 0, 0);
+        _root = root;
+        _header = BuildHeader();
+        root.Controls.Add(_header, 0, 0);
 
         var scroll = new Panel
         {
@@ -168,6 +183,8 @@ public sealed class MainForm : Form
             Margin = new Padding(0),
             Padding = new Padding(0)
         };
+
+        _stack = stack;
 
         stack.Controls.Add(
             BuildConnectionCard(),
@@ -304,8 +321,10 @@ public sealed class MainForm : Form
             Padding = new Padding(0)
         };
 
+        // Size the label column to its longest label instead of a fixed
+        // pixel width, which is not DPI-scaled and wrapped the labels.
         grid.ColumnStyles.Add(
-            new ColumnStyle(SizeType.Absolute, 210));
+            new ColumnStyle(SizeType.AutoSize));
 
         grid.ColumnStyles.Add(
             new ColumnStyle(SizeType.Percent, 100));
@@ -556,6 +575,9 @@ public sealed class MainForm : Form
 
         _aboutButton!.Text =
             T.About;
+
+        _status.Text =
+            _statusText();
     }
 
     private void UpdateCredentialBehavior()
@@ -573,7 +595,13 @@ public sealed class MainForm : Form
             _persistent.Checked;
     }
 
-    private void RefreshDriveLetters()
+    private void SetStatus(Func<string> text)
+    {
+        _statusText = text;
+        _status.Text = text();
+    }
+
+    private void RefreshDriveLetters(bool updateStatus = true)
     {
         var free =
             _network.GetFreeDriveLetters();
@@ -584,10 +612,13 @@ public sealed class MainForm : Form
         if (free.Contains("Z"))
             _freeDrive.SelectedItem = "Z";
 
-        _status.Text =
+        if (!updateStatus)
+            return;
+
+        SetStatus(() =>
             _language == UiLanguage.German
                 ? $"{free.Count} freie Laufwerksbuchstaben"
-                : $"{free.Count} free drive letters";
+                : $"{free.Count} free drive letters");
     }
 
     private void ConnectDrive()
@@ -712,9 +743,12 @@ public sealed class MainForm : Form
                 $"credentialMethod={credentialResult?.Method ?? "<none>"}; " +
                 $"reconnectSelfTest={(profile.Persistent && mustStoreCredentials ? "passed" : "not-required")}");
 
-            _status.Text =
+            bool selfTested =
                 profile.Persistent &&
-                mustStoreCredentials
+                mustStoreCredentials;
+
+            SetStatus(() =>
+                selfTested
                     ? (_language ==
                         UiLanguage.German
                         ? "Verbunden. Reconnect-Selbsttest erfolgreich."
@@ -722,9 +756,9 @@ public sealed class MainForm : Form
                     : (_language ==
                         UiLanguage.German
                         ? "Netzlaufwerk verbunden."
-                        : "Network drive connected.");
+                        : "Network drive connected."));
 
-            RefreshDriveLetters();
+            RefreshDriveLetters(updateStatus: false);
         }
         catch (Exception ex)
         {
@@ -1084,36 +1118,38 @@ public sealed class MainForm : Form
 
     private void ApplyWindowLayoutForCurrentMonitor()
     {
-        Screen screen =
-            Screen.FromHandle(Handle);
-
         Rectangle work =
-            screen.WorkingArea;
+            Screen.FromHandle(Handle).WorkingArea;
 
-        // PerMonitorV2 gives us device-pixel monitor bounds. Sizing the
-        // window as a percentage of the actual working area avoids mixing
-        // fixed 96-DPI logical sizes with 450-% device sizes.
+        // PerMonitorV2: DeviceDpi is the DPI of the monitor the window is on,
+        // WorkingArea is in device pixels. Convert the logical width once.
+        double scale =
+            DeviceDpi / 96.0;
+
+        int maxWidth =
+            (int)(work.Width * MaxWorkingAreaRatio);
+
+        int maxHeight =
+            (int)(work.Height * MaxWorkingAreaRatio);
+
+        int frameWidth =
+            Width - ClientSize.Width;
+
+        int frameHeight =
+            Height - ClientSize.Height;
+
         int targetWidth =
-            (int)Math.Round(
-                work.Width *
-                WorkingAreaWidthRatio);
+            Math.Min(
+                (int)Math.Round(PreferredLogicalWidth * scale) + frameWidth,
+                maxWidth);
 
+        // Fit the height to the actual content instead of filling the
+        // screen with empty space. If the content does not fit, the
+        // scroll panel takes over.
         int targetHeight =
-            (int)Math.Round(
-                work.Height *
-                WorkingAreaHeightRatio);
-
-        targetWidth =
-            Math.Clamp(
-                targetWidth,
-                Math.Min(640, work.Width),
-                work.Width);
-
-        targetHeight =
-            Math.Clamp(
-                targetHeight,
-                Math.Min(520, work.Height),
-                work.Height);
+            Math.Min(
+                MeasureContentHeight(targetWidth - frameWidth, scale) + frameHeight,
+                maxHeight);
 
         int x =
             work.Left +
@@ -1135,13 +1171,45 @@ public sealed class MainForm : Form
                 targetHeight);
     }
 
+    private int MeasureContentHeight(
+        int clientWidth,
+        double scale)
+    {
+        if (_root is null ||
+            _header is null ||
+            _stack is null)
+        {
+            return ClientSize.Height;
+        }
+
+        int innerWidth =
+            Math.Max(
+                1,
+                clientWidth - _root.Padding.Horizontal);
+
+        var proposal =
+            new Size(innerWidth, 0);
+
+        int height =
+            _root.Padding.Vertical +
+            _header.GetPreferredSize(proposal).Height +
+            _header.Margin.Vertical +
+            _stack.GetPreferredSize(proposal).Height +
+            _stack.Margin.Vertical +
+            _status.GetPreferredSize(proposal).Height +
+            _status.Margin.Vertical;
+
+        // Small reserve for rounding and the card borders.
+        return height + (int)Math.Round(12 * scale);
+    }
+
     private void Fail(Exception ex)
     {
         _logger.Error(
             ex.ToString());
 
-        _status.Text =
-            ex.Message;
+        string message = ex.Message;
+        SetStatus(() => message);
 
         MessageBox.Show(
             this,
