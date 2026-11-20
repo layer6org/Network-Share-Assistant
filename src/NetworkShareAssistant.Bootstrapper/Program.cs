@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 namespace NetworkShareAssistant.Bootstrapper;
 
@@ -41,9 +42,26 @@ internal static class Program
                 runtime);
 
             string exe = Path.Combine(destination, "Network-Share-Assistant.exe");
+            string marker = Path.Combine(destination, ".payload.sha256");
 
-            if (!File.Exists(exe))
-                Extract(runtime, destination);
+            using Stream payload = OpenPayload(runtime);
+            string hash = Convert.ToHexString(SHA256.HashData(payload));
+
+            // Re-extract whenever the embedded payload differs from what was
+            // extracted before. Checking only for the EXE would keep running
+            // an outdated payload after a rebuild with the same version, and
+            // would never repair an interrupted extraction.
+            if (!File.Exists(exe) ||
+                !File.Exists(marker) ||
+                !string.Equals(
+                    File.ReadAllText(marker).Trim(),
+                    hash,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                payload.Position = 0;
+                Extract(payload, destination);
+                File.WriteAllText(marker, hash);
+            }
 
             var psi = new ProcessStartInfo
             {
@@ -96,15 +114,20 @@ internal static class Program
         };
     }
 
-    private static void Extract(string runtime, string destination)
+    private static Stream OpenPayload(string runtime)
     {
         string resourceName = $"NetworkShareAssistant.Payload.{runtime}.zip";
-        using Stream? stream =
+        Stream? stream =
             Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
 
         if (stream is null)
             throw new InvalidOperationException($"Embedded payload missing: {runtime}");
 
+        return stream;
+    }
+
+    private static void Extract(Stream stream, string destination)
+    {
         string temp = Path.Combine(
             Path.GetTempPath(),
             "Network-Share-Assistant",

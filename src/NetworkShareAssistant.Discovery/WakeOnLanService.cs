@@ -64,7 +64,7 @@ public sealed class WakeOnLanService
                .Trim();
 
         if (normalized.Length != 12 ||
-            !normalized.All(Uri.IsHexDigit))
+            !normalized.All(char.IsAsciiHexDigit))
             throw new ArgumentException("Ungültige MAC-Adresse.", nameof(mac));
 
         var bytes = new byte[6];

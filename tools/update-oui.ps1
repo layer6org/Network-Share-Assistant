@@ -30,7 +30,7 @@ try {
                 -Uri $source.Url `
                 -OutFile $csvPath `
                 -Headers @{
-                    "User-Agent" = "Network-Share-Assistant OUI Updater/1.6.3"
+                    "User-Agent" = "Network-Share-Assistant OUI Updater"
                     "Accept" = "text/csv,text/plain,*/*"
                 } `
                 -UseBasicParsing

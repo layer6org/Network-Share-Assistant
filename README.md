@@ -201,7 +201,7 @@ This section contains technical information for administrators, developers, and 
 ## Plattform / Platform
 
 - Windows
-- .NET 8
+- .NET 10 (LTS)
 - x64 and ARM64 application payloads
 - single offline launcher/build artifact
 - no online bootstrapper required
